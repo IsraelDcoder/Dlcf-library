@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Categories - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-folder"></i> Manage Categories</h1>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}" class="active"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-content-grid">
+        <div class="admin-card">
+            <h3>Add New Category</h3>
+            <form method="POST" class="admin-form">
+                <input type="hidden" name="action" value="add">
+                <div class="form-group">
+                    <label for="name">Category Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter category name">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Enter description (optional)"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Category</button>
+            </form>
+        </div>
+        
+        <div class="admin-card">
+            <h3>Existing Categories</h3>
+            <div class="category-list">
+                {% for category in categories %}
+                <div class="category-item">
+                    <div class="category-info">
+                        <h4>{{ category.name }}</h4>
+                        <p>{{ category.description or 'No description' }}</p>
+                        <span class="category-count">{{ category.contents.count() }} items</span>
+                    </div>
+                    <form method="POST" class="delete-form" onsubmit="return confirm('Delete this category?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="category_id" value="{{ category.id }}">
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="no-items">No categories yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

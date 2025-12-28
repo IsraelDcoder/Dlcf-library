@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Send Notifications - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-bell"></i> Notifications</h1>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}" class="active"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-content-grid">
+        <div class="admin-card">
+            <h3>Send Notification</h3>
+            <form method="POST" class="admin-form">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required placeholder="Notification title">
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="4" required placeholder="Enter your message"></textarea>
+                </div>
+                <div class="form-group checkbox">
+                    <label>
+                        <input type="checkbox" name="is_global" id="is_global" checked> Send to all users
+                    </label>
+                </div>
+                <div class="form-group" id="recipient_group" style="display: none;">
+                    <label for="recipient_id">Select User</label>
+                    <select id="recipient_id" name="recipient_id">
+                        <option value="">Select a user...</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.name }} ({{ user.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Notification</button>
+            </form>
+        </div>
+        
+        <div class="admin-card">
+            <h3>Recent Notifications</h3>
+            <div class="notification-admin-list">
+                {% for notif in notifications %}
+                <div class="notification-admin-item">
+                    <h4>{{ notif.title }}</h4>
+                    <p>{{ notif.message }}</p>
+                    <div class="notification-meta">
+                        <span>{% if notif.is_global %}<i class="fas fa-globe"></i> Global{% else %}<i class="fas fa-user"></i> {{ notif.recipient.name if notif.recipient else 'Unknown' }}{% endif %}</span>
+                        <span>{{ notif.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-items">No notifications sent yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('is_global').addEventListener('change', function() {
+    document.getElementById('recipient_group').style.display = this.checked ? 'none' : 'block';
+});
+</script>
+{% endblock %}

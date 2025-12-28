@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block title %}{{ community.name }} — Chat{% endblock %}
+
+{% block content %}
+<div class="community-chat-page">
+  <div class="chat-hero glass">
+    <div class="left"><h2>{{ community.name }} Chat</h2><p class="muted">Real-time conversation for your community</p></div>
+    <div class="right"><a href="{{ url_for('community.feed', community_id=community.id) }}" class="btn">Back to Feed</a></div>
+  </div>
+
+  <div class="chat-wrap glass">
+    <div id="chatWindow" class="chat-window">
+      {% for m in messages %}
+      <div class="chat-msg"><strong>{{ m.author.name }}</strong> <span class="time muted">{{ m.created_at.strftime('%H:%M') }}</span><div class="text">{{ m.message }}</div></div>
+      {% endfor %}
+    </div>
+    <form id="chatForm" class="chat-form" onsubmit="return false;">
+      <input id="chatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+      <button id="sendBtn" class="btn btn-primary">Send</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="" crossorigin="anonymous"></script>
+<script>
+  const COMMUNITY_ID = {{ community.id }};
+</script>
+<script src="{{ url_for('static', filename='js/community.js') }}"></script>
+{% endblock %}

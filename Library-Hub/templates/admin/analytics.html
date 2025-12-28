@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-chart-bar"></i> Analytics</h1>
+        <p>Platform usage statistics for the last 30 days</p>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}" class="active"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3><i class="fas fa-fire"></i> Most Viewed Content</h3>
+            <div class="analytics-list">
+                {% for content in top_content %}
+                <div class="analytics-item">
+                    <span class="rank">{{ loop.index }}</span>
+                    <div class="item-info">
+                        <span class="item-title">{{ content.title }}</span>
+                        <span class="item-type">{{ content.content_type }}</span>
+                    </div>
+                    <span class="item-stat"><i class="fas fa-eye"></i> {{ content.view_count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="admin-card">
+            <h3><i class="fas fa-download"></i> Most Downloaded</h3>
+            <div class="analytics-list">
+                {% for content in top_downloaded %}
+                <div class="analytics-item">
+                    <span class="rank">{{ loop.index }}</span>
+                    <div class="item-info">
+                        <span class="item-title">{{ content.title }}</span>
+                        <span class="item-type">{{ content.content_type }}</span>
+                    </div>
+                    <span class="item-stat"><i class="fas fa-download"></i> {{ content.download_count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3><i class="fas fa-users"></i> Most Active Users</h3>
+            <div class="analytics-list">
+                {% for user, count in active_users %}
+                <div class="analytics-item">
+                    <span class="rank">{{ loop.index }}</span>
+                    <div class="item-info">
+                        <span class="item-title">{{ user.name }}</span>
+                        <span class="item-type">{{ user.role }}</span>
+                    </div>
+                    <span class="item-stat"><i class="fas fa-chart-line"></i> {{ count }} actions</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="admin-card">
+            <h3><i class="fas fa-folder"></i> Content by Category</h3>
+            <div class="analytics-list">
+                {% for name, count in content_by_category %}
+                <div class="analytics-item">
+                    <div class="item-info">
+                        <span class="item-title">{{ name or 'Uncategorized' }}</span>
+                    </div>
+                    <span class="item-stat"><i class="fas fa-file"></i> {{ count }} items</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Activity History - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1><i class="fas fa-history"></i> Activity History</h1>
+    </div>
+    
+    <div class="history-page">
+        {% if activities.items %}
+        <div class="activity-list">
+            {% for activity in activities.items %}
+            <div class="activity-item">
+                <div class="activity-icon {{ activity.action }}">
+                    {% if activity.action == 'view' %}
+                    <i class="fas fa-eye"></i>
+                    {% elif activity.action == 'download' %}
+                    <i class="fas fa-download"></i>
+                    {% elif activity.action == 'upload' %}
+                    <i class="fas fa-upload"></i>
+                    {% elif activity.action == 'login' %}
+                    <i class="fas fa-sign-in-alt"></i>
+                    {% elif activity.action == 'logout' %}
+                    <i class="fas fa-sign-out-alt"></i>
+                    {% else %}
+                    <i class="fas fa-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="activity-info">
+                    <p class="activity-details">{{ activity.details or activity.action.title() }}</p>
+                    <span class="activity-time">{{ activity.timestamp.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+                {% if activity.content %}
+                <a href="{{ url_for('content.view', content_id=activity.content_id) }}" class="btn btn-sm">View Content</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if activities.pages > 1 %}
+        <div class="pagination">
+            {% if activities.has_prev %}
+            <a href="{{ url_for('main.history', page=activities.prev_num) }}" class="page-link">&laquo; Previous</a>
+            {% endif %}
+            
+            <span class="page-info">Page {{ activities.page }} of {{ activities.pages }}</span>
+            
+            {% if activities.has_next %}
+            <a href="{{ url_for('main.history', page=activities.next_num) }}" class="page-link">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h3>No activity yet</h3>
+            <p>Start exploring the library to see your activity history here.</p>
+            <a href="{{ url_for('main.browse') }}" class="btn btn-primary">Browse Content</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

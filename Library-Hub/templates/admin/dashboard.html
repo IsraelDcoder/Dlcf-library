@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="active"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-stats">
+        <div class="stat-card">
+            <div class="stat-icon users"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.total_users }}</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon content"><i class="fas fa-file-alt"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.total_content }}</h3>
+                <p>Total Content</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon views"><i class="fas fa-eye"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.total_views }}</h3>
+                <p>Total Views</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon downloads"><i class="fas fa-download"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.total_downloads }}</h3>
+                <p>Total Downloads</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3><i class="fas fa-chart-pie"></i> Users by Role</h3>
+            <div class="role-stats">
+                <div class="role-item">
+                    <span class="role-name">Admins</span>
+                    <span class="role-count">{{ stats.users_by_role.get('admin', 0) }}</span>
+                </div>
+                <div class="role-item">
+                    <span class="role-name">Teachers</span>
+                    <span class="role-count">{{ stats.users_by_role.get('teacher', 0) }}</span>
+                </div>
+                <div class="role-item">
+                    <span class="role-name">Students</span>
+                    <span class="role-count">{{ stats.users_by_role.get('student', 0) }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-card">
+            <h3><i class="fas fa-file"></i> Content by Type</h3>
+            <div class="type-stats">
+                <div class="type-item">
+                    <span class="type-name"><i class="fas fa-file-pdf"></i> PDFs</span>
+                    <span class="type-count">{{ stats.content_by_type.get('pdf', 0) }}</span>
+                </div>
+                <div class="type-item">
+                    <span class="type-name"><i class="fas fa-book"></i> eBooks</span>
+                    <span class="type-count">{{ stats.content_by_type.get('ebook', 0) }}</span>
+                </div>
+                <div class="type-item">
+                    <span class="type-name"><i class="fas fa-headphones"></i> Audio</span>
+                    <span class="type-count">{{ stats.content_by_type.get('audio', 0) }}</span>
+                </div>
+                <div class="type-item">
+                    <span class="type-name"><i class="fas fa-video"></i> Videos</span>
+                    <span class="type-count">{{ stats.content_by_type.get('video', 0) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3><i class="fas fa-fire"></i> Top Content</h3>
+            <div class="top-list">
+                {% for content in top_content[:5] %}
+                <div class="top-item">
+                    <span class="top-title">{{ content.title }}</span>
+                    <span class="top-stat"><i class="fas fa-eye"></i> {{ content.view_count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="admin-card">
+            <h3><i class="fas fa-broadcast-tower"></i> Live Sessions</h3>
+            <div id="live-controls">
+                <div class="live-start">
+                    <input type="text" id="live-title" placeholder="Session title" />
+                    <button id="btn-start-live" class="btn btn-primary">Start Live</button>
+                </div>
+                <div class="live-list" id="live-list">
+                    <p class="muted">Loading sessions…</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-card">
+            <h3><i class="fas fa-user-clock"></i> Recent Users</h3>
+            <div class="recent-list">
+                {% for user in recent_users[:5] %}
+                <div class="recent-item">
+                    <span class="user-name">{{ user.name }}</span>
+                    <span class="user-role {{ user.role }}">{{ user.role }}</span>
+                    <span class="user-date">{{ user.created_at.strftime('%b %d') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-card full-width">
+        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+        <div class="activity-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in recent_activities[:10] %}
+                    <tr>
+                        <td>{{ activity.user.name }}</td>
+                        <td><span class="action-badge {{ activity.action }}">{{ activity.action }}</span></td>
+                        <td>{{ activity.details or '-' }}</td>
+                        <td>{{ activity.timestamp.strftime('%b %d, %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin_live.js') }}"></script>
+{% endblock %}

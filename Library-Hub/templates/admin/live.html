@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Live Sessions - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-broadcast-tower"></i> Live Sessions</h1>
+    </div>
+
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.live') }}" class="active"><i class="fas fa-broadcast-tower"></i> Live</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+    </div>
+
+    <div class="admin-toolbar">
+        <div class="toolbar-row">
+            <input type="text" id="live-title-input" placeholder="Session title" />
+            <button id="btn-start-live-global" class="btn btn-primary">Start Live</button>
+        </div>
+    </div>
+
+    <div class="admin-card full-width">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Host</th>
+                    <th>Stream</th>
+                    <th>Status</th>
+                    <th>Recording</th>
+                    <th>Saved Content</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="live-management-list">
+                {% for item in sessions %}
+                {% set s = item.session %}
+                <tr data-id="{{ s.id }}">
+                    <td>{{ s.title }}</td>
+                    <td>{{ s.host.name if s.host else '—' }}</td>
+                    <td>
+                        {% if s.stream_key %}
+                        <div class="small">
+                            <code class="muted">{{ s.stream_key[:8] }}... </code>
+                            <button class="btn btn-sm btn-outline btn-copy-key" data-key="{{ s.stream_key }}">Copy</button>
+                        </div>
+                        {% else %}
+                        <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.is_live %}
+                        <span class="status-badge status-live">Live Now</span>
+                        {% elif s.recording_path and not s.is_saved %}
+                        <span class="status-badge status-recording">Recording Ready</span>
+                        {% elif s.is_saved %}
+                        <span class="status-badge status-saved">Saved</span>
+                        {% else %}
+                        <span class="muted">Idle</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.recording_path %}
+                        <a href="{{ url_for('content.serve_file', content_id=(item.content.id if item.content else 0) ) if item.content else '#' }}" class="btn btn-sm">Download</a>
+                        {% else %}
+                        <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.content %}
+                        <a href="{{ url_for('content.view', content_id=item.content.id) }}">View</a>
+                        {% else %}
+                        <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline btn-end-session" data-id="{{ s.id }}">End</button>
+                        {% if not s.recording_path %}
+                        <label class="btn btn-sm btn-outline btn-upload-label" style="margin-left:6px;">
+                            <input type="file" class="live-upload-input" data-id="{{ s.id }}" style="display:none"> Upload
+                        </label>
+                        {% endif %}
+                        {% if not s.is_saved and s.recording_path %}
+                        <button class="btn btn-sm btn-primary btn-save-session" data-id="{{ s.id }}">Save</button>
+                        {% endif %}
+                        {% if item.content %}
+                        <form action="{{ url_for('admin.toggle_publish', content_id=item.content.id) }}" method="POST" style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-outline">{% if item.content.is_public %}Unpublish{% else %}Publish{% endif %}</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin_live_manage.js') }}"></script>
+<script>
+document.addEventListener('click', function(e){
+  if(e.target && e.target.matches('.btn-copy-key')){
+    const key = e.target.getAttribute('data-key');
+    navigator.clipboard && navigator.clipboard.writeText(key).then(()=>{
+      alert('Stream key copied to clipboard');
+    });
+  }
+});
+</script>
+{% endblock %}

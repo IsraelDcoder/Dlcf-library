@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DLCF e-Library{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if request.endpoint == 'main.index' %}landing{% endif %}" data-endpoint="{{ request.endpoint }}">
+    <!-- Rendered Endpoint: {{ request.endpoint }} -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-logo">
+                <i class="fas fa-book-open"></i>
+                <span>DLCF e-Library</span>
+            </a>
+            
+            {% if current_user.is_authenticated %}
+            <div class="nav-search">
+                <form action="{{ url_for('main.browse') }}" method="GET">
+                    <input type="text" name="q" placeholder="Search content..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+            {% endif %}
+            
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <button class="nav-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme" aria-pressed="false" style="margin-left:10px">
+                <i id="themeToggleIcon" class="fas fa-moon"></i>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('main.browse') }}"><i class="fas fa-compass"></i> Browse</a></li>
+                {% if current_user.can_upload() %}
+                <li><a href="{{ url_for('content.upload') }}"><i class="fas fa-upload"></i> Upload</a></li>
+                {% endif %}
+                {% if current_user.is_admin() %}
+                <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-cog"></i> Admin</a></li>
+                {% endif %}
+                <li class="nav-dropdown">
+                    <a href="#" class="dropdown-toggle">
+                        <i class="fas fa-user-circle"></i> {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('auth.profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a href="{{ url_for('main.history') }}"><i class="fas fa-history"></i> History</a></li>
+                        <li><a href="{{ url_for('main.notifications') }}"><i class="fas fa-bell"></i> Notifications</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li><a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                <li><a href="{{ url_for('auth.register') }}" class="btn-nav">Register</a></li>
+                {% endif %}
+               <!-- theme toggle in nav header (explictly placed with id=themeToggle above) -->
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="flash-close">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><i class="fas fa-book-open"></i> DLCF e-Library</h3>
+                <p>Your gateway to knowledge and learning resources.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('main.browse') }}">Browse Content</a></li>
+                    <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><i class="fas fa-envelope"></i> support@dlcf.org</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 DLCF e-Library. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

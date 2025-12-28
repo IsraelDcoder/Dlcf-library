@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Content - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="browse-page">
+    <div class="browse-header">
+        <h1>Browse Library</h1>
+        <p>Explore our collection of learning resources</p>
+    </div>
+    
+    <div class="browse-container">
+        <aside class="filters-sidebar">
+            <h3><i class="fas fa-filter"></i> Filters</h3>
+            
+            <form action="{{ url_for('main.browse') }}" method="GET" id="filterForm">
+                <div class="filter-group">
+                    <label>Content Type</label>
+                    <select name="type" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="pdf" {% if current_type == 'pdf' %}selected{% endif %}>PDFs</option>
+                        <option value="ebook" {% if current_type == 'ebook' %}selected{% endif %}>eBooks</option>
+                        <option value="audio" {% if current_type == 'audio' %}selected{% endif %}>Audio</option>
+                        <option value="video" {% if current_type == 'video' %}selected{% endif %}>Video</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_category|string == category.id|string %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select name="sort" onchange="this.form.submit()">
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Viewed</option>
+                        <option value="downloads" {% if current_sort == 'downloads' %}selected{% endif %}>Most Downloaded</option>
+                    </select>
+                </div>
+                
+                {% if search_query %}
+                <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+                
+                <a href="{{ url_for('main.browse') }}" class="btn btn-outline btn-block">Clear Filters</a>
+            </form>
+        </aside>
+        
+        <main class="browse-content">
+            {% if search_query %}
+            <div class="search-info">
+                <p>Showing results for "<strong>{{ search_query }}</strong>"</p>
+            </div>
+            {% endif %}
+            
+            {% if contents.items %}
+            <div class="content-grid">
+                {% for content in contents.items %}
+                <div class="content-card">
+                    <div class="content-type-badge {{ content.content_type }}">
+                        <i class="fas {{ content.get_type_icon() }}"></i>
+                    </div>
+                    <h3>{{ content.title }}</h3>
+                    <p class="content-author">{{ content.author or 'Unknown Author' }}</p>
+                    {% if content.category %}
+                    <p class="content-category"><i class="fas fa-folder"></i> {{ content.category.name }}</p>
+                    {% endif %}
+                    <div class="content-meta">
+                        <span><i class="fas fa-eye"></i> {{ content.view_count }}</span>
+                        <span><i class="fas fa-download"></i> {{ content.download_count }}</span>
+                    </div>
+                    <a href="{{ url_for('content.view', content_id=content.id) }}" class="btn btn-sm">View Details</a>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if contents.pages > 1 %}
+            <div class="pagination">
+                {% if contents.has_prev %}
+                <a href="{{ url_for('main.browse', page=contents.prev_num, type=current_type, category=current_category, sort=current_sort, q=search_query) }}" class="page-link">&laquo; Previous</a>
+                {% endif %}
+                
+                <span class="page-info">Page {{ contents.page }} of {{ contents.pages }}</span>
+                
+                {% if contents.has_next %}
+                <a href="{{ url_for('main.browse', page=contents.next_num, type=current_type, category=current_category, sort=current_sort, q=search_query) }}" class="page-link">Next &raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>No content found</h3>
+                <p>Try adjusting your filters or search terms.</p>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

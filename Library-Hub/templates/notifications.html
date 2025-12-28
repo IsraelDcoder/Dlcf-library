@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1><i class="fas fa-bell"></i> Notifications</h1>
+    </div>
+    
+    <div class="notifications-page">
+        {% if notifications %}
+        <div class="notification-list-full">
+            {% for notif in notifications %}
+            <div class="notification-card {% if not notif.is_read %}unread{% endif %}">
+                <div class="notification-header">
+                    <h3>{{ notif.title }}</h3>
+                    <span class="notification-time">{{ notif.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+                <p class="notification-message">{{ notif.message }}</p>
+                {% if notif.is_global %}
+                <span class="notification-badge global"><i class="fas fa-globe"></i> Global Announcement</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <h3>No notifications</h3>
+            <p>You're all caught up! Check back later for updates.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

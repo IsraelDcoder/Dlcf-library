@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-history"></i> Activity Logs</h1>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}" class="active"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-toolbar">
+        <form action="{{ url_for('admin.activity') }}" method="GET" class="filter-form">
+            <select name="action" onchange="this.form.submit()">
+                <option value="">All Actions</option>
+                {% for action in action_types %}
+                <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>{{ action.title() }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    <div class="admin-card full-width">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Content</th>
+                    <th>IP Address</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities.items %}
+                <tr>
+                    <td>{{ activity.user.name }}</td>
+                    <td><span class="action-badge {{ activity.action }}">{{ activity.action }}</span></td>
+                    <td>{{ activity.details or '-' }}</td>
+                    <td>{% if activity.content %}<a href="{{ url_for('content.view', content_id=activity.content_id) }}">{{ activity.content.title[:30] }}...</a>{% else %}-{% endif %}</td>
+                    <td>{{ activity.ip_address or '-' }}</td>
+                    <td>{{ activity.timestamp.strftime('%b %d, %Y %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if activities.pages > 1 %}
+        <div class="pagination">
+            {% if activities.has_prev %}
+            <a href="{{ url_for('admin.activity', page=activities.prev_num, action=action_filter) }}" class="page-link">&laquo;</a>
+            {% endif %}
+            <span class="page-info">Page {{ activities.page }} of {{ activities.pages }}</span>
+            {% if activities.has_next %}
+            <a href="{{ url_for('admin.activity', page=activities.next_num, action=action_filter) }}" class="page-link">&raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

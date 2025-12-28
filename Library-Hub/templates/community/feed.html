@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/community_feed.js') }}" defer></script>
+{% endblock %}
+
+{% block title %}{{ community.name }} — Community Feed{% endblock %}
+
+{% block content %}
+<div class="community-layout">
+  <!-- Left navigation column -->
+  <aside class="left-nav glass" aria-label="Community navigation">
+    <div class="community-info">
+      {% if community.photo_thumbnail %}
+      <img class="community-avatar" src="{{ url_for('uploads.uploads', filename='communities/' + community.photo_thumbnail) }}" srcset="{{ url_for('uploads.uploads', filename='communities/' + community.photo_thumbnail_2x) }} 2x" alt="{{ community.name }}">
+      {% else %}
+      <div class="community-avatar placeholder">{{ community.name[:2]|upper }}</div>
+      {% endif %}
+      <div class="community-meta">
+        <h2>{{ community.name }}</h2>
+        <div class="muted small">{{ members|length }} members</div>
+      </div>
+    </div>
+
+    <nav class="nav-list" role="navigation" aria-label="Community actions">
+      <a href="{{ url_for('community.feed', community_id=community.id) }}" class="nav-item active">Feed</a>
+      <a href="{{ url_for('community.chat', community_id=community.id) }}" class="nav-item">Live Chat</a>
+      <a href="#members" class="nav-item">Members</a>
+      <a href="#media" class="nav-item">Media</a>
+      <a href="#events" class="nav-item">Events</a>
+      {% if current_role in ['teacher','admin'] %}
+      <a href="#moderation" class="nav-item">Moderation</a>
+      {% endif %}
+    </nav>
+
+    <div class="nav-footer muted small">Last active: {{ community.created_at.strftime('%b %Y') }}</div>
+  </aside>
+
+  <!-- Main feed column -->
+  <main class="center-column" role="main">
+    <header class="center-header glass">
+      <div>
+        <h1 class="community-title">{{ community.name }}</h1>
+        <p class="muted">{{ community.description or 'A focused professional learning community' }}</p>
+      </div>
+      <div class="header-actions">
+        {% if current_role in ['teacher','admin'] %}
+        <a class="btn" href="{{ url_for('community.create_community') }}">Create</a>
+        {% endif %}
+        <a class="btn btn-outline" href="#members">Members ({{ members|length }})</a>
+      </div>
+    </header>
+
+    <!-- Pinned posts (visible to all) -->
+    <section class="pinned section" aria-labelledby="pinned-heading">
+      <h3 id="pinned-heading">Pinned</h3>
+      <div class="pinned-list">
+        {% for post in posts if post.is_pinned %}
+        <article class="card pinned-card" aria-label="Pinned post by {{ post.author.name }}">
+          <div class="card-head">
+            <div class="author">{{ post.author.name }}</div>
+            <time class="time">{{ post.created_at.strftime('%b %d %Y • %H:%M') }}</time>
+          </div>
+          <h4 class="card-title">{{ post.title or 'Untitled' }}</h4>
+          <div class="card-body">{{ post.body }}</div>
+        </article>
+        {% endfor %}
+        {% if posts|selectattr('is_pinned')|list|length == 0 %}
+        <div class="muted">No pinned posts.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Composer -->
+    <section class="composer section" aria-labelledby="composer-heading">
+      <h3 id="composer-heading" class="sr-only">Create a post</h3>
+      <form class="composer-form glass" action="{{ url_for('community.create_post', community_id=community.id) }}" method="POST" aria-label="Create a post">
+        <div class="composer-top">
+          <input name="title" class="input-title" placeholder="Add a concise title (optional)" aria-label="Post title">
+        </div>
+        <div class="composer-body">
+          <label class="sr-only" for="post-body">Post body</label>
+          <textarea id="post-body" name="body" class="input-body" placeholder="Share an update, resource, or question with the community" required></textarea>
+        </div>
+        <div class="composer-actions">
+          <div class="muted">Posting as <strong>{{ current_user.name }}</strong></div>
+          <div class="action-group">
+            <button type="submit" class="btn btn-primary">Post</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Feed -->
+    <section class="feed section" aria-labelledby="feed-heading">
+      <h3 id="feed-heading" class="sr-only">Community feed</h3>
+      <div class="cards">
+        {% for post in posts if not post.is_pinned %}
+        <article class="card" id="post-{{ post.id }}">
+          <div class="card-head">
+            <div class="avatar" aria-hidden="true">{{ post.author.name[:2]|upper }}</div>
+            <div class="meta">
+              <div class="author">{{ post.author.name }}</div>
+              <time class="time">{{ post.created_at.strftime('%b %d %Y • %H:%M') }}</time>
+            </div>
+            <div class="card-actions">
+              {% if current_role in ['teacher','admin'] %}
+              <form action="{{ url_for('community.pin_post', post_id=post.id) }}" method="POST" class="inline-form">
+                <button class="btn btn-icon" aria-label="Pin post">{% if post.is_pinned %}Unpin{% else %}Pin{% endif %}</button>
+              </form>
+              <form action="{{ url_for('community.delete_post', post_id=post.id) }}" method="POST" class="inline-form" onsubmit="return confirm('Delete this post?')">
+                <button class="btn btn-icon btn-danger" aria-label="Delete post">Delete</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+          <h4 class="card-title">{{ post.title or 'Untitled' }}</h4>
+          <div class="card-body">{{ post.body }}</div>
+
+          <div class="card-footer">
+            <form action="{{ url_for('community.add_comment', post_id=post.id) }}" method="POST" class="comment-form" aria-label="Add comment">
+              <input name="body" class="input-comment" placeholder="Write a comment…" aria-label="Comment body">
+              <button class="btn btn-sm" type="submit">Comment</button>
+            </form>
+            <div class="existing-comments">
+              {% for c in post.comments_list %}
+              <div class="comment"><strong>{{ c.author.name }}</strong> {{ c.body }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+
+  <!-- Right context column -->
+  <aside class="right-nav glass" aria-label="Community context">
+    <div class="panel rules">
+      <h4>Community rules</h4>
+      <ol>
+        <li>Be respectful and constructive.</li>
+        <li>Share resources with proper attribution.</li>
+        <li>Report issues to moderators via the Moderation panel.</li>
+      </ol>
+    </div>
+
+    <div class="panel stats">
+      <h4>Stats</h4>
+      <dl>
+        <dt>Members</dt><dd>{{ members|length }}</dd>
+        <dt>Posts (last 30 days)</dt><dd>{{ posts|length }}</dd>
+      </dl>
+    </div>
+
+    <div class="panel mods">
+      <h4>Moderators</h4>
+      <ul class="mods-list">
+        {% for m in members if m.role in ['teacher','admin'] %}
+        <li>{{ m.name }} <span class="muted">({{ m.role }})</span></li>
+        {% endfor %}
+      </ul>
+      {% if current_role == 'admin' %}
+      <div class="admin-tools">
+        <a href="#manage" class="btn">Manage members</a>
+        <a href="#settings" class="btn">Settings</a>
+      </div>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+
+{% endblock %}

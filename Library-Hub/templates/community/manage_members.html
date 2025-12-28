@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block title %}Manage Members — {{ community.name }}{% endblock %}
+
+{% block content %}
+<div class="community-page">
+  <div class="community-hero glass">
+    <div class="hero-left">
+      <h1>Manage members for {{ community.name }}</h1>
+      <p class="muted">Select users to be members of this community.</p>
+    </div>
+    <div class="hero-right">
+      <a href="{{ url_for('community.feed', community_id=community.id) }}" class="btn">Back</a>
+    </div>
+  </div>
+
+  <div class="panel glass" style="margin-top:18px;">
+    <form method="POST">
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;padding:12px;">
+        {% for u in users %}
+        <label style="display:flex;align-items:center;gap:12px">
+          <input type="checkbox" name="user_ids" value="{{ u.id }}" {% if u.id in member_ids %}checked{% endif %} />
+          <div style="flex:1"><strong>{{ u.name }}</strong><div class="muted">{{ u.email }}</div></div>
+          <select name="role_{{ u.id }}">
+            <option value="student" {% if member_roles and member_roles.get(u.id)=='student' %}selected{% endif %}>Student</option>
+            <option value="teacher" {% if member_roles and member_roles.get(u.id)=='teacher' %}selected{% endif %}>Teacher</option>
+            <option value="admin" {% if member_roles and member_roles.get(u.id)=='admin' %}selected{% endif %} {% if not current_user.is_admin() %}disabled{% endif %}>Admin</option>
+          </select>
+        </label>
+        {% endfor %}
+      </div>
+      <div style="margin-top:12px"><button class="btn btn-primary">Save Members</button></div>
+    </form>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/manage_members.js') }}"></script>
+{% endblock %}

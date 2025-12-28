@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Content - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h1><i class="fas fa-file-alt"></i> Manage Content</h1>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-home"></i> Overview</a>
+        <a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Users</a>
+        <a href="{{ url_for('admin.content') }}" class="active"><i class="fas fa-file-alt"></i> Content</a>
+        <a href="{{ url_for('admin.categories') }}"><i class="fas fa-folder"></i> Categories</a>
+        <a href="{{ url_for('admin.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+        <a href="{{ url_for('admin.activity') }}"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+    </div>
+    
+    <div class="admin-toolbar">
+        <form action="{{ url_for('admin.content') }}" method="GET" class="filter-form">
+            <select name="type" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                <option value="pdf" {% if type_filter == 'pdf' %}selected{% endif %}>PDF</option>
+                <option value="ebook" {% if type_filter == 'ebook' %}selected{% endif %}>eBook</option>
+                <option value="audio" {% if type_filter == 'audio' %}selected{% endif %}>Audio</option>
+                <option value="video" {% if type_filter == 'video' %}selected{% endif %}>Video</option>
+                <option value="live" {% if type_filter == 'live' %}selected{% endif %}>Live Recordings</option>
+            </select>
+            <input type="text" name="search" placeholder="Search content..." value="{{ search }}">
+            <button type="submit" class="btn btn-sm"><i class="fas fa-search"></i></button>
+        </form>
+        <a href="{{ url_for('content.upload') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Content</a>
+    </div>
+    
+    <div class="admin-card full-width">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Author</th>
+                    <th>Uploader</th>
+                    <th>Views</th>
+                    <th>Downloads</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for content in contents.items %}
+                <tr>
+                    <td>{{ content.title }}</td>
+                    <td><span class="type-badge {{ content.content_type }}">{{ content.content_type }}</span></td>
+                    <td>{{ content.author or '-' }}</td>
+                    <td>{{ content.uploader.name }}</td>
+                    <td>{{ content.view_count }}</td>
+                    <td>{{ content.download_count }}</td>
+                    <td><span class="status-badge {% if content.is_public %}public{% else %}private{% endif %}">{{ 'Public' if content.is_public else 'Private' }}</span></td>
+                    <td>
+                        <a href="{{ url_for('content.view', content_id=content.id) }}" class="btn btn-sm"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('content.edit', content_id=content.id) }}" class="btn btn-sm"><i class="fas fa-edit"></i></a>
+                        {% if content.content_type == 'live' %}
+                        <form action="{{ url_for('admin.toggle_publish', content_id=content.id) }}" method="POST" style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-outline">{% if content.is_public %}Unpublish{% else %}Publish{% endif %}</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if contents.pages > 1 %}
+        <div class="pagination">
+            {% if contents.has_prev %}
+            <a href="{{ url_for('admin.content', page=contents.prev_num, type=type_filter, search=search) }}" class="page-link">&laquo;</a>
+            {% endif %}
+            <span class="page-info">Page {{ contents.page }} of {{ contents.pages }}</span>
+            {% if contents.has_next %}
+            <a href="{{ url_for('admin.content', page=contents.next_num, type=type_filter, search=search) }}" class="page-link">&raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

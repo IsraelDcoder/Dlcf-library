@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block title %}Community Management{% endblock %}
+
+{% block content %}
+<div class="community-page">
+  <div class="community-hero glass">
+    <div class="hero-left">
+      <h1>Community Management</h1>
+      <p class="muted">Create and manage communities for the platform.</p>
+    </div>
+    <div class="hero-right">
+      <a href="{{ url_for('community.create_community') }}" class="btn btn-primary">Create Community</a>
+      <a href="{{ url_for('main.dashboard') }}" class="btn">Back</a>
+    </div>
+  </div>
+
+  <div style="margin-top:18px">
+    {% if communities %}
+    <div class="panel glass">
+      <h4>All Communities</h4>
+      <ul style="list-style:none;padding:0;margin:0">
+        {% for c in communities %}
+        <li style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
+          <div style="display:flex;gap:12px;align-items:center">
+            {% if c.photo_thumbnail %}
+            <img src="{{ url_for('uploads.uploads', filename='communities/' + c.photo_thumbnail) }}" style="width:56px;height:56px;border-radius:8px;object-fit:cover" alt="{{ c.name }}">
+            {% endif %}
+            <div>
+              <div style="font-weight:700">{{ c.name }}</div>
+              <div class="muted">{{ c.description or '—' }}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <a href="{{ url_for('community.manage_members', community_id=c.id) }}" class="btn">Manage Members</a>
+            <a href="{{ url_for('community.feed', community_id=c.id) }}" class="btn">Open Feed</a>
+            <form action="{{ url_for('community.delete_community', community_id=c.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete community \"{{ c.name }}\"? This will remove all posts and members.');">
+              <button class="btn btn-danger" type="submit" aria-label="Delete community"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% else %}
+    <div class="panel glass muted">No communities yet — create one to get started.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

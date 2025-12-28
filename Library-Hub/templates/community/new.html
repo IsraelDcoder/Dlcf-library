@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community_create.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/community_create.js') }}" defer></script>
+{% endblock %}
+
+{% block title %}Create a Community{% endblock %}
+
+{% block content %}
+<div class="create-page">
+  <header class="page-header">
+    <div class="breadcrumbs"><a href="{{ url_for('main.dashboard') }}">Dashboard</a> <span aria-hidden="true">›</span> <a href="{{ url_for('community.index') }}">Communities</a> <span aria-hidden="true">›</span> Create</div>
+    <h1>Create a Community</h1>
+    <p class="subtitle">Create a focused community space for members to share resources, ask questions, and collaborate. Communities are private by default — you control membership.</p>
+  </header>
+
+  <form class="create-form" action="" method="POST" enctype="multipart/form-data" novalidate>
+    <div class="sections">
+      <!-- Section A: Basics -->
+      <section class="card section basics" aria-labelledby="basics-title">
+        <div class="card-head">
+          <h2 id="basics-title">Community Basics</h2>
+          <p class="muted">Name and short description to introduce your community.</p>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label class="float-label" for="name">Community name</label>
+            <input id="name" type="text" name="name" required maxlength="100" placeholder="e.g., Gospel Study Group" />
+            <div class="helper">Choose a clear, searchable name. 100 characters max.</div>
+            <div class="error" data-for="name" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label class="float-label" for="description">Short description</label>
+            <textarea id="description" name="description" rows="4" maxlength="300" placeholder="Write a concise description of the community’s focus."></textarea>
+            <div class="char-counter"><span id="desc-count">0</span>/300</div>
+            <div class="helper">A short summary helps members understand the purpose.</div>
+            <div class="error" data-for="description" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section B: Identity -->
+      <section class="card section identity" aria-labelledby="identity-title">
+        <div class="card-head">
+          <h2 id="identity-title">Community Identity</h2>
+          <p class="muted">Upload a community image. This represents your community across the platform.</p>
+        </div>
+        <div class="card-body">
+          <div class="upload-area" id="upload-area">
+            <input type="file" id="photo" name="photo" accept="image/png,image/jpeg,image/gif" />
+            <div class="upload-inner">
+              <svg class="icon" width="48" height="48" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 20h14v-2H5v2zM13 3v8h3l-4 5-4-5h3V3h2z"/></svg>
+              <p>Drag & drop an image, or <button type="button" class="link-button" id="choose-file">Choose file</button></p>
+              <p class="muted small">Max 2MB. PNG, JPG, GIF supported.</p>
+            </div>
+          </div>
+          <div class="preview" id="preview" aria-live="polite"></div>
+          <div class="error" data-for="photo" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Section C: Settings -->
+      <section class="card section settings" aria-labelledby="settings-title">
+        <div class="card-head">
+          <h2 id="settings-title">Community Settings</h2>
+          <p class="muted">Control who can join and what roles are available.</p>
+        </div>
+        <div class="card-body">
+          <div class="field inline">
+            <label>Visibility</label>
+            <div class="radio-group" role="radiogroup" aria-label="Visibility">
+              <label class="radio">
+                <input type="radio" name="visibility" value="private" checked>
+                <div class="radio-body">
+                  <div class="title">Private</div>
+                  <div class="muted small">Members must be invited by admins.</div>
+                </div>
+              </label>
+              <label class="radio">
+                <input type="radio" name="visibility" value="invite">
+                <div class="radio-body">
+                  <div class="title">Invite-only</div>
+                  <div class="muted small">Visible in community directory, but joining requires approval.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Role overview <span class="muted small">(Admins, Moderators, Members)</span></label>
+            <p class="muted small">Admins manage settings and members. Moderators help keep discussions constructive. Members participate and share resources.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section D: Review & Create -->
+      <section class="card section review" aria-labelledby="review-title">
+        <div class="card-head">
+          <h2 id="review-title">Review & Create</h2>
+          <p class="muted">Preview how the community will appear to members.</p>
+        </div>
+        <div class="card-body review-body">
+          <div class="summary-preview" id="summary-preview" aria-hidden="false">
+            <div class="summary-avatar" id="summary-avatar"></div>
+            <div class="summary-info">
+              <div class="summary-name" id="summary-name">(Community name)</div>
+              <div class="summary-desc muted" id="summary-desc">(Short description)</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="create-btn">Create Community</button>
+            <a href="{{ url_for('community.index') }}" class="btn btn-outline">Cancel</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block title %}Dashboard - DLCF e-Library{% endblock %}
+
+{% block content %}
+<div class="app-layout app-fade">
+    <aside class="sidebar" aria-label="Sidebar">
+        <div class="sidebar-top">
+            <a class="logo" href="{{ url_for('main.index') }}"><i class="fas fa-book-open"></i><span>DLCF e-Library</span></a>
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fas fa-chevron-left"></i></button>
+        </div>
+        <nav>
+            <ul>
+                <li><a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}"><i class="fas fa-tachometer-alt"></i><span class="nav-label">Dashboard</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('main.browse') }}"><i class="fas fa-book"></i><span class="nav-label">Library</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('main.categories') }}"><i class="fas fa-layer-group"></i><span class="nav-label">Categories</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('community.index') }}"><i class="fas fa-users"></i><span class="nav-label">Community</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('main.browse') }}?filter=sermon"><i class="fas fa-church"></i><span class="nav-label">Sermons</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('main.browse') }}?filter=books"><i class="fas fa-book-reader"></i><span class="nav-label">Books</span></a></li>
+                {% if current_user.is_admin() %}
+                <li><a class="nav-link" href="{{ url_for('admin.uploads') }}"><i class="fas fa-upload"></i><span class="nav-label">Uploads</span></a></li>
+                <li><a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i><span class="nav-label">Users</span></a></li>
+                {% endif %}
+                <li><a class="nav-link" href="{{ url_for('main.settings') }}"><i class="fas fa-cog"></i><span class="nav-label">Settings</span></a></li>
+            </ul>
+        </nav>
+    </aside>
+    <div class="main-area" style="flex:1;display:flex;flex-direction:column;">
+        <header class="topbar">
+            <div class="left" style="display:flex;align-items:center;gap:12px">
+                <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Menu" style="display:none"><i class="fas fa-bars"></i></button>
+                <div class="page-title">{{ page_title or 'Dashboard' }}</div>
+            </div>
+            <div class="search">
+                <form action="{{ url_for('main.browse') }}" method="GET">
+                    <input type="text" name="q" placeholder="Search the library..." aria-label="Search" value="{{ request.args.get('q','') }}">
+                </form>
+            </div>
+            <div class="right-actions">
+                <button id="topNotifBtn" class="icon-btn icon-badge" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    {% if notifications %}
+                    <span class="badge">{{ notifications|length }}</span>
+                    {% endif %}
+                </button>
+                <div id="notifPanel" class="user-dropdown-menu" style="right:82px;">
+                    {% if notifications %}
+                        {% for notif in notifications[:6] %}
+                        <a href="#" style="display:block; padding:8px 12px;">{{ notif.title }}<div style="font-size:.8rem;color:var(--muted-text);">{{ notif.created_at.strftime('%b %d') }}</div></a>
+                        {% endfor %}
+                        <div style="padding:8px 12px;"><a href="{{ url_for('main.notifications') }}">View all notifications</a></div>
+                    {% else %}
+                        <div style="padding:12px;color:var(--muted-text)">No recent notifications</div>
+                    {% endif %}
+                </div>
+                <div class="user-dropdown" id="userMenu">
+                    <div id="userAvatar" role="button" class="user-avatar">{{ current_user.name[0]|upper }}</div>
+                    <div class="user-dropdown-menu">
+                        <a href="{{ url_for('auth.profile') }}">Profile</a>
+                        <a href="{{ url_for('auth.logout') }}">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content-area">
+            <div class="dashboard-grid">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book-reader"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_books if stats and stats.total_books is defined else (stats.total_content if stats else 0) }}</h3>
+                            <p>Total Books</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:linear-gradient(135deg,#ffb74d,#f59e0b)"><i class="fas fa-bullhorn"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_sermons if stats and stats.total_sermons is defined else (stats.total_videos if stats else 0) }}</h3>
+                            <p>Sermons Available</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:linear-gradient(135deg,#16a34a,#059669)"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_categories if stats and stats.total_categories is defined else (categories|length if categories else 0) }}</h3>
+                            <p>Categories</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:linear-gradient(135deg,#4c51bf,#2b3e9a)"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.active_users if stats and stats.active_users is defined else 0 }}</h3>
+                            <p>Active Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:linear-gradient(135deg,#6b7280,#374151)"><i class="fas fa-upload"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.new_uploads if stats and stats.new_uploads is defined else 0 }}</h3>
+                            <p>New Uploads (week)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.most_read_count if stats and stats.most_read_count is defined else 0 }}</h3>
+                            <p>Most Read</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" style="grid-column:span 8;">
+                    <div class="section-header">
+                        <div class="section-title">Recently Added Resources</div>
+                        <div class="section-actions">
+                            <a href="{{ url_for('main.browse') }}?sort=recent" class="view-all">View All</a>
+                        </div>
+                    </div>
+                    <div class="content-list">
+                        {% if recent_content %}
+                        {% for c in recent_content %}
+                        <div class="content-card">
+                            <div class="content-thumb">
+                                {% if c.thumbnail %}
+                                <img src="{{ url_for('static', filename=c.thumbnail) }}" alt="{{ c.title }}" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>
+                                {% else %}
+                                <i class="fas fa-file-alt"></i>
+                                {% endif %}
+                            </div>
+                            <div class="content-detail">
+                                <h4>{{ c.title }}</h4>
+                                <p>{{ c.author or 'Unknown Author' }} — {{ c.category.name if c.category else 'Uncategorized' }}</p>
+                                <div class="content-meta"><span>{{ c.created_at.strftime('%b %d, %Y') }}</span><span> · </span><span><i class="fas fa-eye"></i> {{ c.view_count or 0 }}</span></div>
+                            </div>
+                            <div style="margin-left:auto"><a class="btn btn-sm" href="{{ url_for('content.view', content_id=c.id) }}">Open</a></div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="content-card"><div class="content-detail">No recent resources</div></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section" style="grid-column:span 4;">
+                    <div class="section-header">
+                        <div class="section-title">Popular Materials</div>
+                        <div class="section-actions"><a href="{{ url_for('main.browse') }}?sort=popular" class="view-all">See All</a></div>
+                    </div>
+                    <div class="popular-scroll">
+                        {% if popular_content %}
+                        {% for p in popular_content %}
+                        <div class="popular-card">
+                            <div style="display:flex;gap:10px;align-items:center">
+                                <div style="width:64px;height:48px;border-radius:10px;background:#eef3ff;display:flex;align-items:center;justify-content:center">
+                                    <i class="fas {{ p.get_type_icon() }}"></i>
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-weight:700">{{ p.title }}</div>
+                                    <div style="font-size:0.85rem;color:var(--muted-text);">{{ p.author or 'Unknown' }}</div>
+                                </div>
+                            </div>
+                            <div class="card-footer">{{ p.view_count }} views · {{ p.created_at.strftime('%b %d') }}</div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="popular-card">No popular materials yet</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section" style="grid-column:span 8;">
+                    <div class="section-header"><div class="section-title">Quick Actions</div></div>
+                    <div class="quick-actions">
+                        {% if current_user.can_upload() %}
+                        <button class="btn-quick" data-action="upload"><i class="fas fa-upload"></i> Upload Material</button>
+                        {% else %}
+                        <a href="{{ url_for('main.chat') }}" class="btn-quick"><i class="fas fa-robot"></i> Ask the Library Bot</a>
+                        {% endif %}
+                        {% if current_user.is_admin() %}
+                        <button class="btn-quick" data-action="add-category"><i class="fas fa-folder-plus"></i> Add Category</button>
+                        <button class="btn-outline-quick" data-action="manage-users"><i class="fas fa-users-cog"></i> Manage Users</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section" style="grid-column:span 4;">
+                    <div class="section-header"><div class="section-title">Categories Snapshot</div></div>
+                    <div class="content-list">
+                        {% if categories %}
+                        {% for cat in categories[:6] %}
+                        <div class="content-card">
+                            <div style="width:48px;height:48px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--accent);"><i class="fas fa-folder"></i></div>
+                            <div class="content-detail">
+                                <h4>{{ cat.name }}</h4>
+                                <div class="content-meta">{{ cat.contents.count() }} items</div>
+                            </div>
+                            <div style="margin-left:auto"><a href="{{ url_for('main.browse') }}?category={{ cat.id }}" class="btn btn-sm">View</a></div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="content-card">No categories yet</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    {% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+

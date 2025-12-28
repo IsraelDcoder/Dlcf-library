@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(e => observer.observe(e));
+
+  const landing = document.querySelector('.landing');
+  if (landing) setTimeout(() => landing.classList.add('revealed'), 60);
+});
+</script>
+{% endblock %}
+
+{% block title %}DLCF e-Library — A Smarter Way to Learn more about God{% endblock %}
+
+{% block content %}
+<div class="landing">
+  <div class="lp-container">
+    <header class="hero glass-hero reveal" aria-label="DLCF e-Library">
+      <div class="hero-content">
+        <span class="hero-badge">For churches & learners</span>
+        <h1 class="hero-title">A central library for your church’s teaching, study, and growth</h1>
+        <p class="hero-sub">DLCF e-Library brings PDFs, eBooks, audio talks and videos into one secure, accessible place — easy for teams to manage and simple for members to use.</p>
+
+        <div class="hero-ctas">
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Sign In</a>
+          <a href="{{ url_for('main.browse') }}" class="link-muted">Browse resources</a>
+        </div>
+
+        <ul class="hero-stats">
+          <li><strong>Organized</strong> central collections</li>
+          <li><strong>Accessible</strong> read, listen, watch</li>
+          <li><strong>Manageable</strong> team tools & logs</li>
+        </ul>
+      </div>
+
+      <div class="hero-media" aria-hidden="true">
+        <div class="mock-plate" aria-hidden="true">
+          <div class="app-window" role="img" aria-label="DLCF e-Library screenshot">
+            <img src="{{ url_for('static', filename='img/hero-screenshot.png') }}" alt="DLCF e-Library screenshot" class="hero-screenshot" />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="about reveal" aria-labelledby="about-heading">
+      <h2 id="about-heading">What this library is</h2>
+      <p>It’s a reliable place where churches collect and share study materials — PDFs, eBooks, sermons, audio and video — so people can learn and grow at their own pace.</p>
+    </section>
+
+    <section class="features reveal" aria-labelledby="features-heading">
+      <h2 id="features-heading">Features that matter</h2>
+      <div class="features-grid">
+        <article class="glass-card">
+          <h3>Read & study</h3>
+          <p>Open PDFs and eBooks in the browser with clear navigation and saved progress.</p>
+        </article>
+        <article class="glass-card">
+          <h3>Listen to teachings</h3>
+          <p>Stream sermons and talks with reliable playback and simple controls.</p>
+        </article>
+        <article class="glass-card">
+          <h3>Watch videos</h3>
+          <p>Host teaching series and classes, organized by series and topic.</p>
+        </article>
+        <article class="glass-card">
+          <h3>Manage with confidence</h3>
+          <p>Role-based access, activity logs, and bulk upload tools for your team.</p>
+        </article>
+        <article class="glass-card">
+          <h3>Live Streaming &amp; Message Archiving</h3>
+          <p>Stream messages and teachings live inside the library. Sessions appear as “Live Now”, are automatically saved, and recordings are categorized and published for on-demand listening or download.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="values reveal" aria-labelledby="values-heading">
+      <h2 id="values-heading">Why churches choose DLCF e-Library</h2>
+      <div class="values-grid">
+        <div class="value">
+          <h4>Accessible learning</h4>
+          <p>Members can access resources on desktop and mobile, any time.</p>
+        </div>
+        <div class="value">
+          <h4>Organized collections</h4>
+          <p>Find materials quickly with clear categories and search.</p>
+        </div>
+        <div class="value">
+          <h4>Consistent teaching</h4>
+          <p>Keep resources in one place so small groups and leaders use the same materials.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview reveal" aria-labelledby="preview-heading">
+      <div class="section-head">
+        <h2 id="preview-heading">Popular resources</h2>
+        <a class="link-muted" href="{{ url_for('main.browse') }}">See all</a>
+      </div>
+      <div class="preview-list" role="list">
+        <article class="preview-card" role="listitem">
+          <img src="{{ url_for('static', filename='img/thumb-sermon.png') }}" alt="Sermon series thumbnail" class="preview-thumb" />
+          <div class="preview-title">Sermon Series — Trusting God</div>
+          <div class="preview-meta">Audio · DLCF</div>
+          <div class="preview-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('main.browse') }}?filter=sermon">Listen</a>
+            <div class="muted">3k plays</div>
+          </div>
+        </article>
+        <article class="preview-card" role="listitem">
+          <img src="{{ url_for('static', filename='img/thumb-ebook.png') }}" alt="Bible study guide thumbnail" class="preview-thumb" />
+          <div class="preview-title">Bible Study Guide — Faith & Practice</div>
+          <div class="preview-meta">eBook · DLCF</div>
+          <div class="preview-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('main.browse') }}?filter=books">Read</a>
+            <div class="muted">4k views</div>
+          </div>
+        </article>
+        <article class="preview-card" role="listitem">
+          <img src="{{ url_for('static', filename='img/thumb-devotional.png') }}" alt="Daily devotionals thumbnail" class="preview-thumb" />
+          <div class="preview-title">Daily Devotionals — 30 Days</div>
+          <div class="preview-meta">Audio · DLCF</div>
+          <div class="preview-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('main.browse') }}?filter=audio">Listen</a>
+            <div class="muted">1.2k plays</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="final-cta glass-cta reveal" aria-label="Start using DLCF e-Library">
+      <div class="cta-copy">
+        <h2>Start with a small step</h2>
+        <p>No complicated setups — invite your team, upload your first collection, and share resources with your members.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline">Browse Library</a>
+      </div>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+
