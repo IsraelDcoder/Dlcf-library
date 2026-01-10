@@ -1,136 +1,173 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from dotenv import load_dotenv
 from flask_socketio import SocketIO
-
-load_dotenv()
+from dotenv import load_dotenv
 
 from models import db
 
+# Load environment variables
+load_dotenv()
+
+# Extensions
 migrate = Migrate()
 login_manager = LoginManager()
-socketio = SocketIO()
+socketio = SocketIO(async_mode="eventlet", cors_allowed_origins="*")
 
 
 def create_app():
     app = Flask(__name__)
-    
-    app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key')
-    # Use DATABASE_URL from environment if provided, otherwise fall back to a local SQLite DB
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        db_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'library.db')
-        database_url = f"sqlite:///{db_file}"
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
-    # Community photo constraints
-    app.config['MAX_COMMUNITY_PHOTO_SIZE'] = 2 * 1024 * 1024  # 2 MB
-    app.config['COMMUNITY_PHOTO_THUMB_SIZE'] = (300, 300)
-    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-    
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    
-    for folder in ['pdfs', 'ebooks', 'audio', 'videos', 'profiles', 'communities']:
-        folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder)
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-    # folder for live session recordings
-    live_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'live')
-    if not os.path.exists(live_folder):
-        os.makedirs(live_folder)
-    
+
+    # -------------------------
+    # Core Configuration
+    # -------------------------
+    app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", "dev-secret-key")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB
+
+    # -------------------------
+    # Database Configuration
+    # -------------------------
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        # Fix Render postgres:// issue
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+    else:
+        # Local fallback (development only)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        database_url = f"sqlite:///{os.path.join(base_dir, 'library.db')}"
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
+    # -------------------------
+    # Upload Configuration
+    # -------------------------
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    upload_root = os.path.join(base_dir, "uploads")
+
+    app.config["UPLOAD_FOLDER"] = upload_root
+    app.config["MAX_COMMUNITY_PHOTO_SIZE"] = 2 * 1024 * 1024
+    app.config["COMMUNITY_PHOTO_THUMB_SIZE"] = (300, 300)
+
+    # Ensure folders exist (NOTE: ephemeral on Render Free)
+    folders = [
+        "pdfs", "ebooks", "audio", "videos",
+        "profiles", "communities", "live"
+    ]
+    for folder in folders:
+        os.makedirs(os.path.join(upload_root, folder), exist_ok=True)
+
+    # -------------------------
+    # Initialize Extensions
+    # -------------------------
     db.init_app(app)
     migrate.init_app(app, db)
+
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message_category = 'info'
-    # Configure Redis client if provided and pass message_queue to SocketIO for scaling
-    redis_url = os.environ.get('REDIS_URL')
-    app.redis = None
+    login_manager.login_view = "auth.login"
+    login_manager.login_message_category = "info"
+
+    # -------------------------
+    # Redis (Optional, for SocketIO scaling)
+    # -------------------------
+    redis_url = os.environ.get("REDIS_URL")
     if redis_url:
-        try:
-            import redis as _redis
-            app.redis = _redis.from_url(redis_url, decode_responses=True)
-        except Exception as e:
-            # If redis is not available or fails to connect, leave app.redis as None
-            print('Warning: Redis not available or failed to connect:', e)
-    if redis_url:
-        socketio.init_app(app, cors_allowed_origins='*', message_queue=redis_url)
+        socketio.init_app(app, message_queue=redis_url)
     else:
-        socketio.init_app(app, cors_allowed_origins='*')
-    
+        socketio.init_app(app)
+
+    # -------------------------
+    # User Loader
+    # -------------------------
     from models import User
-    
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
-    
+
+    # -------------------------
+    # Blueprints
+    # -------------------------
     from routes.auth import auth_bp
     from routes.main import main_bp
     from routes.content import content_bp
     from routes.admin import admin_bp
     from routes.api import api_bp
-    
+    from routes.community import community_bp
+    from routes.main_uploads import main_uploads
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
-    app.register_blueprint(content_bp, url_prefix='/content')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(api_bp, url_prefix='/api')
-    from routes.community import community_bp
-    app.register_blueprint(community_bp, url_prefix='/community')
-    # Live sessions (real-time + recordings)
+    app.register_blueprint(content_bp, url_prefix="/content")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(community_bp, url_prefix="/community")
+    app.register_blueprint(main_uploads)
+
+    # Optional live routes
     try:
         from routes.live import live_bp
-        app.register_blueprint(live_bp, url_prefix='/live')
+        app.register_blueprint(live_bp, url_prefix="/live")
     except Exception as e:
-        print('Warning: live routes not available:', e)
-    # register uploads serving route for user-uploaded files
-    from routes.main_uploads import main_uploads
-    app.register_blueprint(main_uploads)
-    # Register SocketIO handlers for community module (if available)
+        print("Live module not loaded:", e)
+
+    # SocketIO handlers (optional)
     try:
         from routes.community import init_socketio
         init_socketio(socketio)
     except Exception as e:
-        print('Warning: failed to initialize community socket handlers:', e)
+        print("SocketIO handlers not loaded:", e)
 
+    # -------------------------
+    # Health Check (Render)
+    # -------------------------
+    @app.route("/healthz")
+    def healthz():
+        return jsonify(status="ok"), 200
+
+    # -------------------------
+    # Secure Admin Bootstrap
+    # -------------------------
     with app.app_context():
-        db.create_all()
         create_default_admin()
-    
+
     return app
+
 
 def create_default_admin():
     from models import User
-    admin = User.query.filter_by(email='admin@dlcf.org').first()
+
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    # Do nothing unless explicitly configured
+    if not admin_email or not admin_password:
+        return
+
+    admin = User.query.filter_by(email=admin_email).first()
     if not admin:
         admin = User(
-            name='Admin',
-            email='admin@dlcf.org',
-            role='admin'
+            name="Admin",
+            email=admin_email,
+            role="admin"
         )
-        admin.set_password('admin123')
+        admin.set_password(admin_password)
         db.session.add(admin)
         db.session.commit()
 
+
+# Application instance (used by Gunicorn)
 app = create_app()
 
-if __name__ == '__main__':
-    # Use SocketIO runner for real-time features
-    import webbrowser
-    port = int(os.environ.get('PORT', '5000'))
-    host = os.environ.get('HOST', '127.0.0.1')
-    # Use a local, clickable host for display when binding to all interfaces
-    display_host = '127.0.0.1' if host == '0.0.0.0' else host
-    url = f"http://{display_host}:{port}/"
-    print(f"Starting DLCF e-Library on {url} (eazy product)")
-    if os.environ.get('AUTO_OPEN_BROWSER', '0') == '1' and display_host in ("127.0.0.1", "localhost"):
-        try:
-            webbrowser.open_new_tab(url)
-        except Exception:
-            pass
-    socketio.run(app, host=host, port=port, debug=True)
+# Local development only
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        debug=os.environ.get("FLASK_ENV") != "production"
+    )
