@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
+from sqlalchemy.pool import NullPool, QueuePool
 
 from models import db
 
@@ -35,10 +36,13 @@ def create_app():
         # Fix Render postgres:// issue
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
+        # Use NullPool in production to avoid Eventlet thread issues
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"poolclass": NullPool}
     else:
-        # Local fallback (development only)
+        # Local SQLite fallback (development)
         base_dir = os.path.dirname(os.path.abspath(__file__))
         database_url = f"sqlite:///{os.path.join(base_dir, 'library.db')}"
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"check_same_thread": False}}
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
