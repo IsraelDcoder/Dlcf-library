@@ -4,7 +4,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool
 
 from models import db
 
@@ -36,8 +36,17 @@ def create_app():
         # Fix Render postgres:// issue
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+        # Ensure SSL required for Render Postgres
+        if database_url.startswith("postgresql://"):
+            if "?" not in database_url:
+                database_url += "?sslmode=require"
+            elif "sslmode=" not in database_url:
+                database_url += "&sslmode=require"
+
         # Use NullPool in production to avoid Eventlet thread issues
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"poolclass": NullPool}
+
     else:
         # Local SQLite fallback (development)
         base_dir = os.path.dirname(os.path.abspath(__file__))
