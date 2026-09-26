@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local configuration and runtime state
+.env
+.env.*
+!.env.example
+library.db
+
+# User-uploaded runtime files
+Library-Hub/uploads/*
+!Library-Hub/uploads/.gitkeep
+
+# Tooling and OS files
+.vscode/
+.DS_Store
+Thumbs.db

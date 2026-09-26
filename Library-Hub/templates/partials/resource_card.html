@@ -1,0 +1,11 @@
+<article class="content-card library-card">
+    <div class="library-card-cover {{ resource.content_type }}">
+        {% if resource.thumbnail %}<img src="{{ url_for('content.serve_thumbnail', content_id=resource.id) }}" alt="{{ resource.title }}" loading="lazy">{% else %}<i class="fas {{ resource.get_type_icon() }}"></i>{% endif %}
+    </div>
+    <span class="library-card-type">{{ resource.content_type|replace('_', ' ')|upper }}</span>
+    <h3>{{ resource.title }}</h3>
+    <p class="content-author">{{ resource.author or 'DLCF e-Library' }}</p>
+    {% if resource.category %}<p class="content-category"><i class="fas fa-folder"></i> {{ resource.category.name }}</p>{% endif %}
+    <div class="content-meta"><span><i class="fas fa-eye"></i> {{ resource.view_count or 0 }}</span><span><i class="fas fa-download"></i> {{ resource.download_count or 0 }}</span></div>
+    <a href="{{ url_for('content.view', content_id=resource.id) }}" class="library-card-action">Open resource <i class="fas fa-arrow-right"></i></a>
+</article>

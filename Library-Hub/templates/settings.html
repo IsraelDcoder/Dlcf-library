@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - DLCF e-Library{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/member.css') }}">{% endblock %}
+
+{% block content %}
+<div class="member-page settings-page">
+    <header class="member-page-header"><span class="page-kicker">Account</span><h1>Settings</h1><p>Manage your profile and account security.</p></header>
+    <div class="settings-layout">
+        <nav class="settings-nav" aria-label="Settings sections">
+            <a class="{% if section == 'profile' %}active{% endif %}" href="{{ url_for('main.settings', section='profile') }}"><i class="fas fa-user"></i> Profile</a>
+            <a class="{% if section == 'security' %}active{% endif %}" href="{{ url_for('main.settings', section='security') }}"><i class="fas fa-lock"></i> Security</a>
+            <a href="{{ url_for('main.notifications') }}"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="{{ url_for('main.dashboard') }}"><i class="fas fa-arrow-left"></i> Back to home</a>
+        </nav>
+        <main class="settings-panel">
+            {% if section == 'security' %}
+            <form method="POST">
+                <input type="hidden" name="section" value="security">
+                <div class="settings-section-heading"><span class="page-kicker">Security</span><h2>Change your password</h2><p>Use a strong password you do not reuse elsewhere.</p></div>
+                <label>New password<input type="password" name="new_password" required minlength="6" autocomplete="new-password"></label>
+                <label>Confirm new password<input type="password" name="confirm_password" required minlength="6" autocomplete="new-password"></label>
+                <button class="primary-action" type="submit">Update password</button>
+            </form>
+            {% else %}
+            <form method="POST">
+                <input type="hidden" name="section" value="profile">
+                <div class="settings-section-heading"><span class="page-kicker">Profile</span><h2>How your account appears</h2><p>Keep your name and short introduction up to date.</p></div>
+                <label>Full name<input type="text" name="name" value="{{ current_user.name }}" required></label>
+                <label>Email address<input type="email" value="{{ current_user.email }}" disabled><small>Email changes are managed by an administrator.</small></label>
+                <label>Bio<textarea name="bio" rows="5" placeholder="Tell your community a little about you.">{{ current_user.bio or '' }}</textarea></label>
+                <button class="primary-action" type="submit">Save profile</button>
+            </form>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

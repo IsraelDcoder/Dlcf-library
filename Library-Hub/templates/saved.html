@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Saved & Progress - DLCF e-Library{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/member.css') }}">{% endblock %}
+
+{% block content %}
+<div class="member-page saved-page">
+    <header class="member-page-header">
+        <span class="page-kicker">Your library</span>
+        <h1>Saved & progress</h1>
+        <p>Keep resources close and pick up where you left off.</p>
+    </header>
+
+    <section class="dashboard-section" aria-labelledby="saved-heading">
+        <div class="section-header"><div><span class="section-kicker">Bookmarked resources</span><h2 id="saved-heading">Saved for later</h2></div><a class="section-link" href="{{ url_for('main.browse') }}">Browse library <i class="fas fa-arrow-right"></i></a></div>
+        {% if saved_resources %}
+        <div class="content-grid">
+            {% for saved in saved_resources %}
+            {% set resource = saved.content %}{% include 'partials/resource_card.html' %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fas fa-bookmark"></i><h3>No saved resources yet</h3><p>Use Save for later on any resource you want to revisit.</p><a class="section-link" href="{{ url_for('main.browse') }}">Explore the library <i class="fas fa-arrow-right"></i></a></div>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-section progress-section" aria-labelledby="progress-heading">
+        <div class="section-header"><div><span class="section-kicker">Keep learning</span><h2 id="progress-heading">Learning progress</h2></div></div>
+        {% if progress_records %}
+        <div class="progress-list">
+            {% for record in progress_records %}
+            <a class="progress-row" href="{{ url_for('content.view', content_id=record.content_id) }}">
+                <span class="progress-icon"><i class="fas {{ record.content.get_type_icon() }}"></i></span>
+                <span class="progress-info"><strong>{{ record.content.title }}</strong><small>{{ 'Completed' if record.completed else 'In progress' }}</small></span>
+                <span class="progress-value"><span class="progress-track"><i style="width: {{ record.progress|round|int }}%"></i></span><small>{{ record.progress|round|int }}%</small></span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fas fa-spinner"></i><h3>Your progress will appear here</h3><p>Open a video or audio resource to start tracking your learning.</p></div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+.library-update-banner { align-items: center; background: #edf7f2; border: 1px solid #83bba0; border-radius: 6px; color: #173f30; display: flex; gap: 14px; justify-content: space-between; margin: 0 auto 16px; max-width: 1200px; padding: 10px 14px; }
+.library-update-banner[hidden] { display: none; }
+.library-update-banner button { background: #176344; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 8px 12px; }
+@media (max-width: 520px) { .library-update-banner { align-items: flex-start; flex-direction: column; gap: 8px; } }
